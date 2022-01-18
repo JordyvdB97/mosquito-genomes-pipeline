@@ -1,8 +1,9 @@
 # Pre-processing
 
-## 1. Loading the sequence data
+## 1. Merging the read files to a single file
 
-I think we need to load the files. For some files there are more than one read file (between 1 and 5 per direction). Those need to be merged.
+	zcat *read_file_name1*_R1.fastq.gz *read_file_name2*_R1.fastq.gz | gzip > *accession_1*_R1.fastq.gz
+	zcat *read_file_name1*_R2.fastq.gz *read_file_name2*_R2.fastq.gz | gzip > *accession_1*_R2.fastq.gz
 
 ## 2. Quality assessment and trimming
 
