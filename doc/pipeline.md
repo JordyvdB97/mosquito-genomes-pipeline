@@ -3,6 +3,8 @@
 ## 1. Merging the read files to a single file
 To about 40% of the sequencing samples have have more than one readfiles, we first need to merge these files together. We use a loop that counts the number of files per sample. If that equals two (biderectional read files) it copies and renames the files to the folder merged. If we have more files, unzips the files per direction and zip it into a new merged container. 
 
+	cd /fileserver
+	
 	SAMPLES=sample_no.txt
 
 	for i in $(cat $SAMPLES)
