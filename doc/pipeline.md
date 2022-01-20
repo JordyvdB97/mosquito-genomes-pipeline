@@ -3,32 +3,35 @@
 ## 1. Merging the read files to a single file
 To about 40% of the sequencing samples have have more than one readfiles, we first need to merge these files together. We use a loop that counts the number of files per sample. If that equals two (biderectional read files) it copies and renames the files to the folder merged. If we have more files, unzips the files per direction and zip it into a new merged container. 
 
-	cd /fileserver
+	cd /fileserver/
 	
 	SAMPLES=sample_no.txt
 
 	for i in $(cat $SAMPLES)
-	do
-	if [ "$(ls ./raw/*_"$i"_*.gz | wc -l)" -eq 2 ]
-	 then
-	    cp ./raw/*_"$i"_*_R1*.gz ./merged/"$i"_R1.fastq.gz
-	    cp ./raw/*_"$i"_*_R2*.gz ./merged/"$i"_R2.fastq.gz
-	 else
-	    zcat ./raw/*_"$i"_*_R1*.gz | gzip > ./merged/"$i"_R1.fastq.gz
-	    zcat ./raw/*_"$i"_*_R2*.gz | gzip > ./merged/"$i"_R2.fastq.gz
-	 fi
-	done
+	   do
+		if [ "$(ls ./raw/*_"$i"_*.gz | wc -l)" -eq 2 ]
+	 	then
+	    		cp ./raw/*_"$i"_*_R1*.gz ./merged/"$i"_R1.fastq.gz
+			cp ./raw/*_"$i"_*_R2*.gz ./merged/"$i"_R2.fastq.gz
+		else
+	    		zcat ./raw/*_"$i"_*_R1*.gz | gzip > ./merged/"$i"_R1.fastq.gz
+	    		zcat ./raw/*_"$i"_*_R2*.gz | gzip > ./merged/"$i"_R2.fastq.gz
+	 	fi
+	   done
 
 ## 2. Quality assessment and trimming
 
 Trimming the low quality ends of the sequences with _fastp_ (Chen et al. 2018).
 
-	fastp \
-                -i $./merged/"$i"_R1.fastq.gz" \
-                -I $./merged/"$i"_R2.fastq.gz" \
-                -o $./merged/"$i"_trimmed_R1.fastq.qt \
-                -O $./merged/"$i"_trimmed_R2.fastq.qt \
-                -j fastp.json -h fastp.html --verbose
+	for i in $(cat $SAMPLES)
+	   do
+		fastp \
+			-i ./merged/"$i"_R1.fastq.gz \
+			-I ./merged/"$i"_R2.fastq.gz \
+			-o ./merged/"$i"_trimmed_R1.fastq.qt \
+			-O ./merged/"$i"_trimmed_R2.fastq.qt \
+			-j fastp.json -h fastp.html --verbose
+	   done
 
 # Assembly
 
