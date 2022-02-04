@@ -69,6 +69,8 @@ First we construct a local reference database. This have to be only done once. W
 	AND mitochondrion[filter] AND (\"12000\"[SLEN] : \"20000\"[SLEN]))" | \
 	tee >(efetch -format gbwithparts > /mnt/e/2020_mtmozseq/blastdb/culicidae_mt_refseq.gb) \
 	>(efetch -format fasta > /mnt/e/2020_mtmozseq/blastdb/culicidae_mt_refseq.fasta) > /dev/null
+	
+	makeblastdb -in /mnt/e/2020_mtmozseq/blastdb/culicidae_mt_refseq.fasta -parse_seqids -dbtype nucl
 
 ## 4. De Novo assembly
 
@@ -83,19 +85,36 @@ First we construct a local reference database. This have to be only done once. W
 			-o /mnt/e/2020_mtmozseq/3getorganelle_assembly/"$i"_getorganelle \
 			-R 10 -k 21,45,65,85,105 -F animal_mt
 	   done
-	
-	
-
-	for i in $(cat $SAMPLES)
-	   do
-		spades.py -k 21,33,55,77 \
-		-o /mnt/e/2020_mtmozseq/4spades_assembly/"$i"_spades_assembly \
-		--12 /mnt/e/2020_mtmozseq/3bbmap_normalized/"$i"_normalized.fq
-	   done
 
 ## 4. nBLAST results
 
+	mkdir /mnt/e/2020_mtmozseq/4nblast_results
+	mkdir /mnt/e/2020_mtmozseq/5mtgenomes
+	
+	awk \
+	-v n=5000 '/^>/{ if(l>n) print b; b=$0;l=0;next } \
+	{l+=length;b=b ORS $0}END{if(l>n) print b }' \
+	/mnt/e/2020_mtmozseq/3getorganelle_assembly/103943-047-058_getorganelle/extended_spades/contigs.fasta > \
+	/mnt/e/2020_mtmozseq/4nblast_results/103943-047-058_contigs_l5000.fasta
 
+	blastn \
+		-query /mnt/e/2020_mtmozseq/4nblast_results/103943-047-058_contigs_l5000.fasta \
+		-db /mnt/e/2020_mtmozseq/blastdb/culicidae_mt_refseq.fasta \
+		-outfmt "10 qseqid sseqid ssciname pident length mismatch gapopen qstart qend sstart send evalue bitscore" \
+		-evalue 1e-30 \
+		-out /mnt/e/2020_mtmozseq/4nblast_results/103943-047-058_blast.csv
+	blastn \
+		-query /mnt/e/2020_mtmozseq/4nblast_results/103943-047-058_contigs_l5000.fasta \
+		-db /mnt/e/2020_mtmozseq/blastdb/culicidae_mt_refseq.fasta \
+		-outfmt "6 qseqid" \
+		-evalue 1e-30  \
+		-max_target_seqs 1 \
+		-out /mnt/e/2020_mtmozseq/4nblast_results/103943-047-058_blast.lst
+	
+	seqtk subseq \
+		/mnt/e/2020_mtmozseq/4nblast_results/103943-047-058_contigs_l5000.fasta\
+		/mnt/e/2020_mtmozseq/4nblast_results/103943-047-058_blast.lst > \
+		/mnt/e/2020_mtmozseq/5mtgenomes/103943-047-058_raw_blasted_contigids.fasta
 
 
 ## 3. Indexing
