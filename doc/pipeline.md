@@ -74,13 +74,11 @@ First we construct a local reference database. This have to be only done once. W
 	mkdir /mnt/e/2020_mtmozseq/blastdb
 
 	taxa=Culicidae
-	esearch -db nuccore -query \
-	"\"mitochondrion\"[All Fields] AND (\"${taxa}\"[Organism]) AND \
-	(refseq[filter] AND mitochondrion[filter] AND (\"12000\"[SLEN] : \"20000\"[SLEN]))" | efetch -format fasta > \
-	/mnt/e/2020_mtmozseq/blastdb/culicidae_mt_refseq.gb
-
-
-command | tee file1 >> file2
+	esearch -db nuccore -query "\"mitochondrion\"[All Fields] \
+	AND (\"${taxa}\"[Organism]) AND (refseq[filter] \
+	AND mitochondrion[filter] AND (\"12000\"[SLEN] : \"20000\"[SLEN]))" | \
+	tee >(efetch -format gbwithparts > /mnt/e/2020_mtmozseq/blastdb/culicidae_mt_refseq.gb) \
+	>(efetch -format fasta > /mnt/e/2020_mtmozseq/blastdb/culicidae_mt_refseq.fasta) > /dev/null
 
 
 
