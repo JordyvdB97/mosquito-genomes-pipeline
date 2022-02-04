@@ -1,9 +1,13 @@
 # Pre-processing
+## 0. Software installation
+	
+	sudo apt install ncbi-entrez-direct
+	
 
 ## 1. Merging the read files to a single file
 To about 40% of the sequencing samples have have more than one readfiles, we first need to merge these files together. We use a loop that counts the number of files per sample. If that equals two (biderectional read files) it copies and renames the files to the folder merged. If we have more files, unzips the files per direction and zip it into a new merged container. 
 
-	
+		
 	mkdir /fileserver/1merged/
 	
 	SAMPLES=/fileserver/sample_no.txt
@@ -49,19 +53,34 @@ Normalizing the coverage by down-sampling the reads in high-depth areas of a gen
 	   do
 		/directory/bbnorm.sh \
 			in=/fileserver/2fastp_trimmed/"$i"_trimmed_R1.fastq.gz \
-			in=/fileserver/2fastp_trimmed/"$i"_trimmed_R2.fastq.gz \
+			in2=/fileserver/2fastp_trimmed/"$i"_trimmed_R2.fastq.gz \
 			out=/fileserver/3bbmap_normalized/"$i"_normalized.fq target=100 min=5
-	 	   done
+	   done
 	
 ## 4. De Novo assembly
 
+	mkdir /mnt/e/2020_mtmozseq/4spades_assembly/
+
+	for i in $(cat $SAMPLES)
+	   do
+		spades.py -k 21,33,55,77 \
+		-o /mnt/e/2020_mtmozseq/4spades_assembly/"$i"_spades_assembly \
+		--12 /mnt/e/2020_mtmozseq/3bbmap_normalized/"$i"_normalized.fq
+	   done
+
+## 4. nBLAST results
+First we construct a local reference database. This have to be only done once. We download the  
+
+	mkdir /mnt/e/2020_mtmozseq/blastdb
+
+	taxa=Culicidae
+	esearch -db nuccore -query \
+	"\"mitochondrion\"[All Fields] AND (\"${taxa}\"[Organism]) AND \
+	(refseq[filter] AND mitochondrion[filter] AND (\"12000\"[SLEN] : \"20000\"[SLEN]))" | efetch -format fasta > \
+	/mnt/e/2020_mtmozseq/blastdb/culicidae_mt_refseq.gb
 
 
-
-
-
-
-
+command | tee file1 >> file2
 
 
 
