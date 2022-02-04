@@ -1,7 +1,9 @@
 # Pre-processing
 ## 0. Software installation
+https://github.com/Kinggerm/GetOrganelle/wiki/Installation
 	
 	sudo apt install ncbi-entrez-direct
+	conda install -c bioconda getorganelle
 	
 
 ## 1. Merging the read files to a single file
@@ -56,19 +58,7 @@ Normalizing the coverage by down-sampling the reads in high-depth areas of a gen
 			in2=/fileserver/2fastp_trimmed/"$i"_trimmed_R2.fastq.gz \
 			out=/fileserver/3bbmap_normalized/"$i"_normalized.fq target=100 min=5
 	   done
-	
-## 4. De Novo assembly
-
-	mkdir /mnt/e/2020_mtmozseq/4spades_assembly/
-
-	for i in $(cat $SAMPLES)
-	   do
-		spades.py -k 21,33,55,77 \
-		-o /mnt/e/2020_mtmozseq/4spades_assembly/"$i"_spades_assembly \
-		--12 /mnt/e/2020_mtmozseq/3bbmap_normalized/"$i"_normalized.fq
-	   done
-
-## 4. nBLAST results
+## 3. Downloading reference library
 First we construct a local reference database. This have to be only done once. We download the  
 
 	mkdir /mnt/e/2020_mtmozseq/blastdb
@@ -79,6 +69,32 @@ First we construct a local reference database. This have to be only done once. W
 	AND mitochondrion[filter] AND (\"12000\"[SLEN] : \"20000\"[SLEN]))" | \
 	tee >(efetch -format gbwithparts > /mnt/e/2020_mtmozseq/blastdb/culicidae_mt_refseq.gb) \
 	>(efetch -format fasta > /mnt/e/2020_mtmozseq/blastdb/culicidae_mt_refseq.fasta) > /dev/null
+
+## 4. De Novo assembly
+
+	mkdir /mnt/e/2020_mtmozseq/3getorganelle_assembly/
+	
+	for i in $(cat $SAMPLES)
+	   do
+		get_organelle_from_reads.py \
+			-s /mnt/e/2020_mtmozseq/blastdb/culicidae_mt_refseq.fasta \
+			-1 /mnt/e/2020_mtmozseq/2fastp_trimmed/"$i"_trimmed_R1.fastq.gz \
+			-2 /mnt/e/2020_mtmozseq/2fastp_trimmed/"$i"_trimmed_R2.fastq.gz \
+			-o /mnt/e/2020_mtmozseq/3getorganelle_assembly/"$i"_getorganelle \
+			-R 10 -k 21,45,65,85,105 -F animal_mt
+	   done
+	
+	
+
+	for i in $(cat $SAMPLES)
+	   do
+		spades.py -k 21,33,55,77 \
+		-o /mnt/e/2020_mtmozseq/4spades_assembly/"$i"_spades_assembly \
+		--12 /mnt/e/2020_mtmozseq/3bbmap_normalized/"$i"_normalized.fq
+	   done
+
+## 4. nBLAST results
+
 
 
 
