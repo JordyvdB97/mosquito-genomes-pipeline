@@ -2,8 +2,10 @@
 ## 0. Software installation
 https://github.com/Kinggerm/GetOrganelle/wiki/Installation
 	
-	sudo apt install ncbi-entrez-direct
+	sudo apt install ncbi-entrez-direct rename
 	conda install -c bioconda getorganelle
+	
+	conda install -c bioconda seqkit
 	
 
 ## 1. Merging the read files to a single file
@@ -67,8 +69,8 @@ First we construct a local reference database. This have to be only done once. W
 	esearch -db nuccore -query "\"mitochondrion\"[All Fields] \
 	AND (\"${taxa}\"[Organism]) AND (refseq[filter] \
 	AND mitochondrion[filter] AND (\"12000\"[SLEN] : \"20000\"[SLEN]))" | \
-	tee >(efetch -format gbwithparts > /mnt/e/2020_mtmozseq/blastdb/culicidae_mt_refseq.gb) \
-	>(efetch -format fasta > /mnt/e/2020_mtmozseq/blastdb/culicidae_mt_refseq.fasta) > /dev/null
+	tee >(efetch -format gbwithparts > /mnt/e/2020_mtmozseq/blastdb/culicidae_mt_refseq.gb) | \
+	efetch -format fasta > /mnt/e/2020_mtmozseq/blastdb/culicidae_mt_refseq.fasta
 	
 	makeblastdb -in /mnt/e/2020_mtmozseq/blastdb/culicidae_mt_refseq.fasta -parse_seqids -dbtype nucl
 
@@ -91,30 +93,49 @@ First we construct a local reference database. This have to be only done once. W
 	mkdir /mnt/e/2020_mtmozseq/4nblast_results
 	mkdir /mnt/e/2020_mtmozseq/5mtgenomes
 	
+	#copy contigs from the assembly to new folder
+	for i in $(cat $SAMPLES)
+	   do
+		cp /mnt/e/2020_mtmozseq/3getorganelle_assembly/"$i"_getorganelle/extended_spades/contigs.fasta \
+		/mnt/e/2020_mtmozseq/4nblast_results/${i}_all_contigs.fasta
+		
+		awk \
+	-v n=5000 '/^>/{ if(l>n) print b; b=$0;l=0;next } \
+	{l+=length;b=b ORS $0}END{if(l>n) print b }' \
+	/mnt/e/2020_mtmozseq/4nblast_results/${i}_all_contigs.fasta > \
+	/mnt/e/2020_mtmozseq/4nblast_results/${i}_contigs_l5000.fasta
+
+	   done
+	
 	awk \
 	-v n=5000 '/^>/{ if(l>n) print b; b=$0;l=0;next } \
 	{l+=length;b=b ORS $0}END{if(l>n) print b }' \
-	/mnt/e/2020_mtmozseq/3getorganelle_assembly/103943-047-058_getorganelle/extended_spades/contigs.fasta > \
-	/mnt/e/2020_mtmozseq/4nblast_results/103943-047-058_contigs_l5000.fasta
+	/mnt/e/2020_mtmozseq/4nblast_results/${i}_all_contigs.fasta > \
+	/mnt/e/2020_mtmozseq/4nblast_results/${i}_contigs_l5000.fasta
 
 	blastn \
-		-query /mnt/e/2020_mtmozseq/4nblast_results/103943-047-058_contigs_l5000.fasta \
+		-query /mnt/e/2020_mtmozseq/4nblast_results/${i}_contigs_l5000.fasta \
 		-db /mnt/e/2020_mtmozseq/blastdb/culicidae_mt_refseq.fasta \
 		-outfmt "10 qseqid sseqid ssciname pident length mismatch gapopen qstart qend sstart send evalue bitscore" \
 		-evalue 1e-30 \
-		-out /mnt/e/2020_mtmozseq/4nblast_results/103943-047-058_blast.csv
+		-out /mnt/e/2020_mtmozseq/4nblast_results/${i}_blast_results.csv
 	blastn \
-		-query /mnt/e/2020_mtmozseq/4nblast_results/103943-047-058_contigs_l5000.fasta \
+		-query /mnt/e/2020_mtmozseq/4nblast_results/${i}_contigs_l5000.fasta \
 		-db /mnt/e/2020_mtmozseq/blastdb/culicidae_mt_refseq.fasta \
 		-outfmt "6 qseqid" \
 		-evalue 1e-30  \
 		-max_target_seqs 1 \
-		-out /mnt/e/2020_mtmozseq/4nblast_results/103943-047-058_blast.lst
+		-out /mnt/e/2020_mtmozseq/4nblast_results/${i}_blast_results.lst
 	
 	seqtk subseq \
-		/mnt/e/2020_mtmozseq/4nblast_results/103943-047-058_contigs_l5000.fasta\
-		/mnt/e/2020_mtmozseq/4nblast_results/103943-047-058_blast.lst > \
-		/mnt/e/2020_mtmozseq/5mtgenomes/103943-047-058_raw_blasted_contigids.fasta
+		/mnt/e/2020_mtmozseq/4nblast_results/${i}_contigs_l5000.fasta \
+		/mnt/e/2020_mtmozseq/4nblast_results/${i}_blast_results.lst | sort | uniq > \
+		/mnt/e/2020_mtmozseq/4nblast_results/${i}_raw_mt_genome.fasta 
+
+
+	python /mnt/e/simple_circularise.py \
+	/mnt/e/2020_mtmozseq/6mt_genomes/103943-047-058_blasted_contigids.fasta \
+	/mnt/e/2020_mtmozseq/6mt_genomes/103943-047-058_circularized.fasta
 
 
 ## 3. Indexing
