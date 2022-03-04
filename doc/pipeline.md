@@ -2,7 +2,7 @@
 ## 0. Software installation
 https://github.com/Kinggerm/GetOrganelle/wiki/Installation
 	
-	sudo apt install ncbi-entrez-direct spades bowtie2 ncbi-blast+ pigz
+	sudo apt install fastp ncbi-entrez-direct spades bowtie2 ncbi-blast+ pigz
 	conda install -c bioconda getorganelle
 	
 	conda install -c bioconda seqkit
