@@ -84,58 +84,53 @@ First we construct a local reference database. This have to be only done once. W
 			-s /mnt/e/2020_mtmozseq/blastdb/culicidae_mt_refseq.fasta \
 			-1 /mnt/e/2020_mtmozseq/2fastp_trimmed/"$i"_trimmed_R1.fastq.gz \
 			-2 /mnt/e/2020_mtmozseq/2fastp_trimmed/"$i"_trimmed_R2.fastq.gz \
-			-o /mnt/e/2020_mtmozseq/3getorganelle_assembly/"$i"_getorganelle \
+			-o /mnt/e/2020_mtmozseq/4getorganelle_assembly/"$i"_getorganelle \
 			-R 5 -k 21,45,65,85,105 -F animal_mt
 	   done
 
 ## 4. nBLAST results
 
-	mkdir /mnt/e/2020_mtmozseq/4nblast_results
-	mkdir /mnt/e/2020_mtmozseq/5mtgenomes
+	mkdir /mnt/e/2020_mtmozseq/5nblast_results
+	mkdir /mnt/e/2020_mtmozseq/6mtgenomes
 	
-	#copy contigs from the assembly to new folder
-	for i in $(cat $SAMPLES)
-	   do
-		cp /mnt/e/2020_mtmozseq/3getorganelle_assembly/"$i"_getorganelle/extended_spades/contigs.fasta \
-		/mnt/e/2020_mtmozseq/4nblast_results/${i}_all_contigs.fasta
-		
-		awk \
-	-v n=5000 '/^>/{ if(l>n) print b; b=$0;l=0;next } \
-	{l+=length;b=b ORS $0}END{if(l>n) print b }' \
-	/mnt/e/2020_mtmozseq/4nblast_results/${i}_all_contigs.fasta > \
-	/mnt/e/2020_mtmozseq/4nblast_results/${i}_contigs_l5000.fasta
+copy contigs from the assembly to new folder
 
-	   done
+	cp /fileserver/4getorganelle_assembly/*accession_number*_getorganelle/extended_spades/contigs.fasta \ 
+	/fileserver/5nblast_results/*accession_number*_all_contigs.fasta
 	
-	awk \
-	-v n=5000 '/^>/{ if(l>n) print b; b=$0;l=0;next } \
-	{l+=length;b=b ORS $0}END{if(l>n) print b }' \
-	/mnt/e/2020_mtmozseq/4nblast_results/${i}_all_contigs.fasta > \
-	/mnt/e/2020_mtmozseq/4nblast_results/${i}_contigs_l5000.fasta
+selecting only contigs larger than 12000 bps
 
+	awk -v n=12000 '/^>/{ if(l>n) print b; b=$0;l=0;next } {l+=length;b=b ORS $0}END{if(l>n) print b }' \ 
+	/fileserver/5nblast_results/*accession_number*_all_contigs.fasta > \
+	/fileserver/5nblast_results/*accession_number*_contigs_l12000.fasta
+	
+blastn contigs against local database of mosquito mt sequences, both into a detailed table and a list with only contig names
+	
 	blastn \
-		-query /mnt/e/2020_mtmozseq/4nblast_results/${i}_contigs_l5000.fasta \
-		-db /mnt/e/2020_mtmozseq/blastdb/culicidae_mt_refseq.fasta \
+		-query /fileserver/5nblast_results/*accession_number*_contigs_l12000.fasta \
+		-db /fileserver/blastdb/culicidae_mt_refseq.fasta \
 		-outfmt "10 qseqid sseqid ssciname pident length mismatch gapopen qstart qend sstart send evalue bitscore" \
 		-evalue 1e-30 \
-		-out /mnt/e/2020_mtmozseq/4nblast_results/${i}_blast_results.csv
+		-out /fileserver/5nblast_results/*accession_number*_blast_results.csv
 	blastn \
-		-query /mnt/e/2020_mtmozseq/4nblast_results/${i}_contigs_l5000.fasta \
-		-db /mnt/e/2020_mtmozseq/blastdb/culicidae_mt_refseq.fasta \
-		-outfmt "6 qseqid" \
-		-evalue 1e-30  \
-		-max_target_seqs 1 \
-		-out /mnt/e/2020_mtmozseq/4nblast_results/${i}_blast_results.lst
+		-query /fileserver/5nblast_results/*accession_number*_contigs_l12000.fasta 
+		-db /fileserver/blastdb/culicidae_mt_refseq.fasta 
+		-outfmt "6 qseqid"  
+		-evalue 1e-30 
+		-max_target_seqs 1 | sort | uniq > /fileserver/5nblast_results/*accession_number*_blast_results.lst
+		
+extract contigs with a match in the database
 	
 	seqtk subseq \
-		/mnt/e/2020_mtmozseq/4nblast_results/${i}_contigs_l5000.fasta \
-		/mnt/e/2020_mtmozseq/4nblast_results/${i}_blast_results.lst | sort | uniq > \
-		/mnt/e/2020_mtmozseq/4nblast_results/${i}_raw_mt_genome.fasta 
+		/fileserver/5nblast_results/*accession_number*_contigs_l12000.fasta \
+		/fileserver/5nblast_results/*accession_number*_blast_results.lst > \
+		/fileserver/6mtgenomes/*accession_number*_blasted_contigids.fasta
 
-
-	python /mnt/e/simple_circularise.py \
-	/mnt/e/2020_mtmozseq/6mt_genomes/103943-047-058_blasted_contigids.fasta \
-	/mnt/e/2020_mtmozseq/6mt_genomes/103943-047-058_circularized.fasta
+correct overlapping ends of with python script
+	
+	python /directory/simple_circularise.py \
+		/fileserver/6mtgenomes/*accession_number*_blasted_contigids.fasta \
+		/fileserver/6mtgenomes/*accession_number*_blasted_contigids_circularized.fasta
 
 
 ## 3. Indexing
