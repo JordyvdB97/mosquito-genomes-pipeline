@@ -85,7 +85,7 @@ First we construct a local reference database. This have to be only done once. W
 			-1 /mnt/e/2020_mtmozseq/2fastp_trimmed/"$i"_trimmed_R1.fastq.gz \
 			-2 /mnt/e/2020_mtmozseq/2fastp_trimmed/"$i"_trimmed_R2.fastq.gz \
 			-o /mnt/e/2020_mtmozseq/3getorganelle_assembly/"$i"_getorganelle \
-			-R 10 -k 21,45,65,85,105 -F animal_mt
+			-R 5 -k 21,45,65,85,105 -F animal_mt
 	   done
 
 ## 4. nBLAST results
