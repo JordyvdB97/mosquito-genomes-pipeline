@@ -46,7 +46,7 @@ Trimming the low quality ends of the sequences with _fastp_ (Chen et al. 2018).
 			-h /fileserver/2fastp_trimmed/fastp_reports/fastp_"$i".html --verbose
  	   done
 
-# Assembly
+# De Novo Assembly
 
 ## 3. Normalizing
 Normalizing the coverage by down-sampling the reads in high-depth areas of a genome (to an average coverage of 100x), and removing reads with a low coverage (less than 5x) with the BBNorm tool of BBMap. This accelarates the de novo assembly, reduces the memory needed for the assembly smaller, and the dataset more tractable for the assembler. Also it seems to improve the assembly quality (@@@ check the original reference @@@). BBMap automatically recognizes that the two imputfiles contain readpairs
@@ -131,6 +131,75 @@ correct overlapping ends of with python script
 	python /directory/simple_circularise.py \
 		/fileserver/6mtgenomes/*accession_number*_blasted_contigids.fasta \
 		/fileserver/6mtgenomes/*accession_number*_blasted_contigids_circularized.fasta
+
+# Mapping against reference
+
+## 1. Paired-end mapping assembly
+
+	minimap2 \
+		-ax sr \
+		/fileserver/reference_sequence.fasta \
+		/fileserver/2fastp_trimmed/*accession_number*_trimmed_R1.fastq.gz \
+		/fileserver/2fastp_trimmed/*accession_number*_trimmed_R2.fastq.gz | \
+	samtools view \
+		-b -u -F 0x04 --threads 4 \
+		-o /fileserver/4minimap/*accession_number*.bam
+		
+## 2. cleaning mapping results
+
+Sort by read name
+
+	samtools sort \
+		-n -l 0 -m 3G --threads 4 \
+		-o /fileserver/4minimap/*accession_number*.nsort.bam \
+		/fileserver/4minimap/*accession_number*.bam
+
+Correct mate pairs
+
+	samtools fixmate \
+		-r -m --threads 4 \
+		/fileserver/4minimap/*accession_number*.nsort.bam \
+		/fileserver/4minimap/*accession_number*.fixmate.bam
+
+Sort numerically
+
+	samtools sort \
+		-l 0 -m 3G --threads 4 \
+		-o /fileserver/4minimap/*accession_number*.sort.bam \
+		/fileserver/4minimap/*accession_number*.fixmate.bam
+
+Remove duplicates
+
+	samtools markdup \
+		-r --threads 4 \
+		/fileserver/4minimap/*accession_number*.sort.bam \
+		/fileserver/4minimap/*accession_number*.markdup.bam
+
+## 3. variant calling
+
+	bcftools mpileup \
+		-Ou -f \
+		/fileserver/reference_sequence.fasta \
+		/fileserver/4minimap/*accession_number*.markdup.bam | \
+	bcftools call \
+		-mv -Oz \
+		-o /fileserver/4minimap/*accession_number*.calls.vcf.gz
+
+Indexing the vcf.gz file
+
+	bcftools index \
+		/fileserver/4minimap/*accession_number*.calls.vcf.gz
+
+## 4. create consensus sequence
+cat /media/jordy/mosqdisk/2020_mtmozseq/final_genomes/done/RMNH.INS.1271376_Ae_albopictus.fasta | bcftools consensus /media/jordy/mosqdisk/2020_mtmozseq/4minimap/103943-047-079.calls.vcf.gz > /media/jordy/mosqdisk/2020_mtmozseq/4minimap/103943-047-079.consensus.fasta
+
+reformat.sh in=/media/jordy/mosqdisk/2020_mtmozseq/4minimap/103943-047-079.consensus.fasta out=/media/jordy/mosqdisk/2020_mtmozseq/final_genomes/done/consensus_sequences/103943-047-079.consensus.fasta fastawrap=0 tuc
+
+
+
+
+
+
 
 
 ## 3. Indexing
