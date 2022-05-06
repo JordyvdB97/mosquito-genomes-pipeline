@@ -1,8 +1,8 @@
 # Pre-processing
 ## 0. Software installation
-https://github.com/Kinggerm/GetOrganelle/wiki/Installation
+https://github.com/Kinggerm/GetOrganelle/wiki/Installation https://github.com/RemiAllio/MitoFinder#get-and-install-mitofinder-linux
 	
-	sudo apt install fastp ncbi-entrez-direct spades bowtie2 ncbi-blast+ pigz automake autoconf gcc
+	sudo apt install fastp ncbi-entrez-direct spades bowtie2 ncbi-blast+ pigz automake autoconf gcc default-jre
 	conda install -c bioconda getorganelle
 	
 	conda install -c bioconda seqkit
