@@ -191,22 +191,22 @@ Indexing the vcf.gz file
 		/fileserver/4minimap/*accession_number*.calls.vcf.gz
 
 ## 4. create consensus sequence
-cat /media/jordy/mosqdisk/2020_mtmozseq/final_genomes/done/RMNH.INS.1271376_Ae_albopictus.fasta | bcftools consensus /media/jordy/mosqdisk/2020_mtmozseq/4minimap/103943-047-079.calls.vcf.gz > /media/jordy/mosqdisk/2020_mtmozseq/4minimap/103943-047-079.consensus.fasta
+	cat \
+		/fileserver/reference_sequence.fasta | \
+	bcftools consensus \
+		/fileserver/4minimap/*accession_number*.calls.vcf.gz > \
+		/fileserver/4minimap/*accession_number*.consensus.fasta
 
-reformat.sh in=/media/jordy/mosqdisk/2020_mtmozseq/4minimap/103943-047-079.consensus.fasta out=/media/jordy/mosqdisk/2020_mtmozseq/final_genomes/done/consensus_sequences/103943-047-079.consensus.fasta fastawrap=0 tuc
+	reformat.sh \
+		in=/fileserver/4minimap/*accession_number*.consensus.fasta \
+		out=/fileserver/7final_fasta_genomes/*accession_number*.consensus.fasta \
+		fastawrap=0 tuc
 
-## Annotation
+# Annotation
 
-SAMPLES=/media/jordy/mosqdisk/2020_mtmozseq/sample_name.txt
-
-for i in $(cat $SAMPLES)
-do 
-mitofinder -j ${i} -a /media/jordy/mosqdisk/2020_mtmozseq/7final_fasta_genomes/${i}.fasta -t "mitfi" -r /media/jordy/mosqdisk/2020_mtmozseq/blastdb/culicidae_mt_refseq.gb -o 5
-done
-
-SAMPLES=/media/jordy/mosqdisk/2020_mtmozseq/sample_name.txt
-
-for i in $(cat $SAMPLES)
-do 
-awk -v seq="$i@COX1" -v RS='>' '$1 == seq {print RS $0}' /media/jordy/mosqdisk/2020_mtmozseq/8annotation/"$i"/"$i"_MitoFinder_mitfi_Final_Results/"$i"_final_genes_NT.fasta > /media/jordy/mosqdisk/2020_mtmozseq/cox1_sequences/"$i"_COX1.fasta
-done
+	mitofinder \
+		-j *sample_name* \
+		-a /fileserver/7final_fasta_genomes/*accession_number*.consensus.fasta \
+		-t "mitfi" \
+		-r /media/jordy/mosqdisk/2020_mtmozseq/blastdb/culicidae_mt_refseq.gb \
+		-o 5
