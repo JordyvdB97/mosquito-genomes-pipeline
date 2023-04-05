@@ -64,7 +64,7 @@ move the succesfull electropherograp files (.ab1) files to the "raw" folder
    
 	for i in $(cat $SAMPLES)
 	    do
-	        /tracy/bin/tracy assemble ./raw/"$i"_COIIF*.ab1 ./raw/"$i"_COIIR*.ab1 -o ./intermediate/"$i"
+	        /tracy/bin/tracy assemble ./raw/"$i"_COIIR*.ab1 ./raw/"$i"_COIIF*.ab1 -o ./intermediate/"$i"
         
           cutadapt -a "ATGGCAGATTAGTGCAATGA...CAAGTACTGGTCTCTTAAAC;max_error_rate=0.15;" --discard-untrimmed -o ./intermediate/"$i".cons.trimmed.fa ./intermediate/"$i".cons.fa
 	      
