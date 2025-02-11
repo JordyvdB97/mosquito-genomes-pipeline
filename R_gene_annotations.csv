@@ -14,9 +14,9 @@ nad4,PCG,10705,11004,300,reverse
 atp8,PCG,4957,5118,162,forward
 rrnL,rRNA,13950,15305,1356,reverse
 rrnS,rRNA,15381,16192,812,reverse
-tRNA-Gln,tRNA,7357,7468,112,reverse
-tRNA-Glu,tRNA,1,89,89,forward
-tRNA-Ile,tRNA,7105,7190,86,forward
+trnQ,tRNA,7357,7468,112,reverse
+trnE,tRNA,1,89,89,forward
+trnI,tRNA,7105,7190,86,forward
 trnA,tRNA,7022,7104,83,forward
 trnC,tRNA,11007,11085,79,reverse
 trnR,tRNA,7192,7266,75,forward
