@@ -234,7 +234,7 @@ gene_summary_wide$common_level <- factor(gene_summary_wide$common_level,
 gene_summary_wide <- gene_summary_wide[order(gene_summary_wide$common_level), ]
 
 # Save the data frame as a CSV file
-#write.csv(gene_summary_wide, "C:/Users/beekjgvander/OneDrive - Universiteit Leiden/Desktop/table_similarity.csv", row.names = FALSE)
+#write.csv(gene_summary_wide, "supplementary_table_S2.csv", row.names = FALSE)
 
 ######
 
@@ -279,4 +279,4 @@ species_level_similarity_gene_summary_wide <- tidyr::pivot_wider(
 )
 
 # Save the data frame as a CSV file
-#write.csv(species_level_similarity_gene_summary_wide, "C:/Users/beekjgvander/OneDrive - Universiteit Leiden/Desktop/table_species_similarity.csv", row.names = FALSE)
+#write.csv(species_level_similarity_gene_summary_wide, "supplementary_table_S3.csv", row.names = FALSE)
