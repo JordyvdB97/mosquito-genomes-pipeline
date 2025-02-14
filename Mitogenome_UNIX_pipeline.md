@@ -1,7 +1,10 @@
 # Mitogenome UNIX pipeline
 This R script accompanies the unpublished manuscript:  
 
-Van der Beek, J. G., Ibáñez-Justicia, A., Biesmeijer, J. C., Lizarazo-Forero, E., Stroo, A., van de Vossenberg, B. T. L. H., Warbroek, T., & Schrama, M. J. J. (n.d.). The differentiating power of mitochondrial genes: complete mitogenome sequences of 27 mosquito species present in Europe. [Unpublished manuscript].  
+Van der Beek, J. G., Ibáñez-Justicia, A., Biesmeijer, J. C., Lizarazo-Forero, E., Stroo, A., van de Vossenberg, B. T. L. H., Warbroek, T., & Schrama, M. J. J. (n.d.). The differentiating power of mitochondrial genes: complete mitogenome sequences of 27 mosquito species present in Europe. [Unpublished manuscript].
+
+📁 **All raw sequencing data can be downloaded [here](https://www.ncbi.nlm.nih.gov/sra/PRJNA1219649) (pre-merged read files)
+📁 **Assembled genomes are available here
 
 For questions or further inquiries, please contact: Jordy van der Beek (jordy.vanderbeek@naturalis.nl).
 
