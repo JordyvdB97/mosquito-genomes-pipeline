@@ -1,3 +1,10 @@
+# Mitogenome UNIX pipeline
+This R script accompanies the unpublished manuscript:  
+
+Van der Beek, J. G., Ibáñez-Justicia, A., Biesmeijer, J. C., Lizarazo-Forero, E., Stroo, A., van de Vossenberg, B. T. L. H., Warbroek, T., & Schrama, M. J. J. (n.d.). The differentiating power of mitochondrial genes: complete mitogenome sequences of 27 mosquito species present in Europe. [Unpublished manuscript].  
+
+For questions or further inquiries, please contact: Jordy van der Beek (jordy.vanderbeek@naturalis.nl).
+
 # Pre-processing
 ## 0. Software installation
 To begin the analysis, you need to install the necessary software packages. Below are the commands and links for installation instructions:
@@ -14,7 +21,7 @@ Run the following commands to install the other essential software:
 ## 1. Merging the read files to a single file
 Some sequencing samples may have multiple read files per sample. This step merges these files to ensure that subsequent processing steps operate on consolidated data.
 
-**Making directory + defining file**:
+Creating directory + defining file:
 - <code>mkdir /fileserver/1merged/</code>: Create a directory for merged read files.
 - <code>SAMPLES=/fileserver/sample_no.txt</code>: Define a file containing sample identifiers.
 
@@ -36,14 +43,13 @@ This loop checks whether a sample has two read files. If true, it copies and ren
 
 ## 2. Quality assessment and trimming
 
-To enhance data quality, remove low-quality bases from sequencing reads using _fastp_.
+To enhance data quality, remove low-quality bases from sequencing reads using [fastp](https://github.com/OpenGene/fastp).
 
-**Making directories**:
-
+Creating directories:
 - <code>mkdir /fileserver/2fastp_trimmed/</code>: Directory for trimmed reads.
 - <code>mkdir /fileserver/2fastp_trimmed/fastp_reports</code>: Directory for reports.
 
-**Trimming process**:
+Trimming process:
 	
 	for i in $(cat $SAMPLES)
 	   do
@@ -63,11 +69,10 @@ fastp generates JSON and HTML reports and creates trimmed FASTQ files for both r
 ## 3. Normalizing
 Normalize read coverage with _BBNorm_ to reduce data complexity and improve assembly efficiency. This accelarates the de novo assembly, reduces the memory needed for the assembly smaller, and the dataset more tractable for the assembler. 
 
-**Making directory**:
-
+Creating directory:
 - <code>mkdir /fileserver/3bbmap_normalized/</code>: Directory for normalized reads.
 
-**Normalization process**:
+Normalization process:
 
 	mkdir /fileserver/3bbmap_normalized/
 
@@ -84,11 +89,10 @@ The command targets an average coverage depth of 100x and filters out regions wi
 ## 3. Downloading reference library
 Construct a local reference database from mitochondrial genome sequences. 
 
-**Making directory**:
-
+Making directory:
 - <code>mkdir /mnt/e/2020_mtmozseq/blastdb</code>: Directory for the database.
 
-**Downloading process**:
+Downloading process:
 
 	taxa=Culicidae
 	esearch -db nuccore -query "\"mitochondrion\"[All Fields] \
@@ -101,11 +105,10 @@ Construct a local reference database from mitochondrial genome sequences.
 As the Refseq dataset is continously updated we placed the uploaded a copy of the database as it was in January 2022 (139 mitogenomes - 139 species; 17 genera) in this Github repoistory: [link](https://github.com/JordyvdB97/mosquito-genomes-pipeline/blob/5eb2f5d19e5e043b5f727edfb5274728bbfae4c5/Culicidae_mt_GenBank_refseq_January_2022.gb).
 
 ## 4. De Novo assembly
-Assemble mitochondrial genomes using GetOrganelle.
+Assemble mitochondrial genomes using [GetOrganelle](https://github.com/Kinggerm/GetOrganelle/).
 
-Making directory:
-
-- <code>mkdir /fileserver/3getorganelle_assembly/</code>: Directory for assembly results.
+Creating directory:
+- <code>mkdir /fileserver/4getorganelle_assembly/</code>: Directory for assembly results.
 
 Assembly process:
 	
@@ -123,8 +126,7 @@ This command assembles mitochondrial sequences by specifying k-mer sizes and out
 
 ## 4. nBLAST results
 
-**Making directories**:
-
+Creating directories:
 - <code>mkdir /fileserver/5nblast_results</code>
 - <code>mkdir /fileserver/6mtgenomes</code>
 	
@@ -170,7 +172,7 @@ Extract relevant contigs:
 		/fileserver/6mtgenomes/*accession_number*_blasted_contigids.fasta
 
 ### Correct overlapping ends
-Correct overlapping ends with the python script retrieved from: @@@
+Correct overlapping ends with the python script [SympleCircularise](https://github.com/Kzra/Simple-Circularise/tree/master):
 	
 	python /directory/simple_circularise.py \
 		/fileserver/6mtgenomes/*accession_number*_blasted_contigids.fasta \
@@ -179,7 +181,12 @@ Correct overlapping ends with the python script retrieved from: @@@
 # Mapping against reference
 
 ## 1. Paired-end mapping assembly
-Align paired-end reads to a reference sequence:
+Creating directories:
+
+- <code>mkdir /fileserver/4minimap</code>
+- <code>mkdir /fileserver/7final_fasta_genomes</code>
+
+Align paired-end reads to a reference sequence using [minimap2](https://github.com/lh3/minimap2):
 
 	minimap2 \
 		-ax sr \
@@ -191,7 +198,7 @@ Align paired-end reads to a reference sequence:
 		-o /fileserver/4minimap/*accession_number*.bam
 		
 ## 2. cleaning mapping results
-Sort, correct mate pairs, and remove duplicates using samtools:
+Sort, correct mate pairs, and remove duplicates using [samtools](https://www.htslib.org/):
 
 Sort by read name
 
@@ -222,7 +229,7 @@ Remove duplicates
 		/fileserver/4minimap/*accession_number*.markdup.bam
 
 ## 3. variant calling
-Call variants using bcftools:
+Call variants using [bcftools](https://samtools.github.io/bcftools/):
 
 	bcftools mpileup \
 		-Ou -f \
@@ -252,7 +259,7 @@ Generate a consensus sequence:
 		fastawrap=0 tuc
 
 # Annotation
-Annotate mitochondrial genomes using MitoFinder:
+Annotate mitochondrial genomes using [MitoFinder](https://github.com/RemiAllio/MitoFinder):
 
 	mitofinder \
 		-j *sample_name* \
